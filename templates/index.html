@@ -11,87 +11,99 @@
         body { font-family: 'Inter', sans-serif; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loader { animation: spin 1s linear infinite; }
-        #captionOutput ul { list-style-type: disc; margin-left: 20px; margin-top: 10px; }
-        #captionOutput li { margin-bottom: 5px; }
-        #captionOutput strong { font-weight: 700; color: #a78bfa; }
+        .prose-output ul { list-style-type: disc; margin-left: 20px; margin-top: 10px; }
+        .prose-output li { margin-bottom: 5px; }
+        .prose-output strong { font-weight: 700; color: #a78bfa; }
+        /* Simple fade-in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
     </style>
 </head>
-<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-4">
+<body class="bg-slate-900 text-white p-4 md:p-8">
 
-    <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-3xl mx-auto border border-slate-700">
-        
-        <div class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-indigo-400">AI Post Generator Backend</h1>
-            <p class="text-slate-400 mt-2">Craft the perfect post with a persona-driven AI engine.</p>
-        </div>
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full border border-slate-700">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-indigo-400">AI Content Hub</h1>
+                <p class="text-slate-400 mt-2">Generate, save, and manage your social media content.</p>
+            </div>
 
-        <div class="space-y-4">
+            <!-- Tab Navigation -->
+            <div class="flex border-b border-slate-700 mb-8">
+                <button id="generatorTab" class="tab-btn bg-slate-700 text-white py-3 px-6 rounded-t-lg font-semibold transition-colors duration-200">Generator</button>
+                <button id="historyTab" class="tab-btn text-slate-400 hover:bg-slate-700/50 py-3 px-6 rounded-t-lg font-semibold transition-colors duration-200">History</button>
+            </div>
+
+            <!-- Tab Content -->
             <div>
-                <label for="personaInput" class="block text-sm font-medium text-slate-300 mb-2">My Niche / Persona</label>
-                <input type="text" id="personaInput" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none" value="A data science masters student and content creator.">
-            </div>
+                <!-- Generator Content -->
+                <div id="generatorContent">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="personaInput" class="block text-sm font-medium text-slate-300 mb-2">My Niche / Persona</label>
+                            <input type="text" id="personaInput" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none" value="A data science masters student and content creator.">
+                        </div>
+                        <div>
+                            <label for="topicInput" class="block text-sm font-medium text-slate-300 mb-2">Post Topic</label>
+                            <input type="text" id="topicInput" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., 'The importance of data cleaning'">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="toneSelect" class="block text-sm font-medium text-slate-300 mb-2">Select Tone</label>
+                                <select id="toneSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <option>Educational</option>
+                                    <option>Professional</option>
+                                    <option>Witty & Casual</option>
+                                    <option>Inspirational</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="platformSelect" class="block text-sm font-medium text-slate-300 mb-2">Select Platform</label>
+                                <select id="platformSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <option>Instagram</option>
+                                    <option>LinkedIn</option>
+                                    <option>Facebook</option>
+                                    <option>Twitter (X)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="generateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                            Generate & Save Post
+                        </button>
+                    </div>
+                    <div id="loader" class="text-center py-8 hidden">
+                        <div class="w-8 h-8 border-4 border-t-indigo-500 border-slate-700 rounded-full loader mx-auto"></div>
+                        <p class="text-slate-400 mt-4">AI is crafting your post...</p>
+                    </div>
+                    <div id="errorOutput" class="mt-6 p-4 bg-red-900/50 border border-red-700 text-red-300 rounded-lg hidden"></div>
+                    <div id="postOutput" class="mt-8 hidden animate-fade-in">
+                        <h2 class="text-2xl font-bold text-center mb-4 text-indigo-400">New Post Generated!</h2>
+                        <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-6 space-y-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-indigo-400 mb-2">Generated Caption:</h3>
+                                <div id="captionOutput" class="text-slate-300 prose-output"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <div>
-                <label for="topicInput" class="block text-sm font-medium text-slate-300 mb-2">Post Topic</label>
-                <input type="text" id="topicInput" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., 'The importance of data cleaning'">
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="toneSelect" class="block text-sm font-medium text-slate-300 mb-2">Select Tone</label>
-                    <select id="toneSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option>Educational</option>
-                        <option>Professional</option>
-                        <option>Witty & Casual</option>
-                        <option>Inspirational</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="platformSelect" class="block text-sm font-medium text-slate-300 mb-2">Select Platform</label>
-                    <select id="platformSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option>Instagram</option>
-                        <option>LinkedIn</option>
-                        <option>Facebook</option>
-                        <option>Twitter (X)</option>
-                    </select>
+                <!-- History Content -->
+                <div id="historyContent" class="hidden">
+                    <div id="historyContainer" class="space-y-6 max-h-[60vh] overflow-y-auto pr-4">
+                        <p id="historyLoader" class="text-slate-400 text-center">Loading history...</p>
+                    </div>
                 </div>
             </div>
-            
-            <button id="generateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center">
-                Generate Post
-            </button>
-        </div>
-
-        <div id="loader" class="text-center py-8 hidden">
-            <div class="w-8 h-8 border-4 border-t-indigo-500 border-slate-700 rounded-full loader mx-auto"></div>
-            <p class="text-slate-400 mt-4">AI is crafting your post...</p>
-        </div>
-
-        <div id="errorOutput" class="mt-6 p-4 bg-red-900/50 border border-red-700 text-red-300 rounded-lg hidden"></div>
-
-        <div id="postOutput" class="mt-8 hidden">
-            <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-6 space-y-6">
-                <div>
-                    <h3 class="text-lg font-semibold text-indigo-400 mb-2">Generated Caption:</h3>
-                    <div id="captionOutput" class="text-slate-300"></div>
-                </div>
-                <div class="border-t border-slate-700 pt-6">
-                    <h3 class="text-lg font-semibold text-indigo-400 mb-2">AI Image Prompt:</h3>
-                    <p id="imagePromptOutput" class="text-slate-400 font-mono text-sm bg-slate-900 p-3 rounded-md"></p>
-                </div>
-                <div class="border-t border-slate-700 pt-6">
-                    <h3 class="text-lg font-semibold text-indigo-400 mb-2">Suggested Hashtags:</h3>
-                    <p id="hashtagsOutput" class="text-slate-400 font-mono"></p>
-                </div>
-            </div>
-            <button id="copyBtn" class="w-full mt-4 bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-3 px-4 rounded-lg transition duration-200">
-                Copy Caption & Hashtags
-            </button>
         </div>
     </div>
 
     <script>
-        // DOM Element References
+        // --- DOM Element References ---
         const personaInput = document.getElementById('personaInput');
         const topicInput = document.getElementById('topicInput');
         const toneSelect = document.getElementById('toneSelect');
@@ -100,14 +112,19 @@
         const loader = document.getElementById('loader');
         const postOutput = document.getElementById('postOutput');
         const captionOutput = document.getElementById('captionOutput');
-        const hashtagsOutput = document.getElementById('hashtagsOutput');
-        const imagePromptOutput = document.getElementById('imagePromptOutput');
         const errorOutput = document.getElementById('errorOutput');
-        const copyBtn = document.getElementById('copyBtn');
+        
+        // Tab elements
+        const generatorTab = document.getElementById('generatorTab');
+        const historyTab = document.getElementById('historyTab');
+        const generatorContent = document.getElementById('generatorContent');
+        const historyContent = document.getElementById('historyContent');
+        const historyContainer = document.getElementById('historyContainer');
+        const historyLoader = document.getElementById('historyLoader');
 
         const markdownConverter = new showdown.Converter();
-        let rawCaption = ''; 
-
+        
+        // --- Main Functions ---
         async function generatePost() {
             const payload = {
                 persona: personaInput.value.trim(),
@@ -126,7 +143,6 @@
             postOutput.classList.add('hidden');
 
             try {
-                // The fetch call now points to our own Flask backend endpoint
                 const response = await fetch('/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -143,7 +159,8 @@
                 if (result.candidates && result.candidates.length > 0) {
                     const responseText = result.candidates[0].content.parts[0].text;
                     const parsedResponse = JSON.parse(responseText);
-                    displayPost(parsedResponse);
+                    displayNewPost(parsedResponse);
+                    fetchHistory(); 
                 } else {
                     throw new Error("The AI returned an empty or invalid response.");
                 }
@@ -156,18 +173,91 @@
             }
         }
 
+        async function fetchHistory() {
+            try {
+                historyLoader.classList.remove('hidden');
+                const response = await fetch('/posts');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const posts = await response.json();
+                displayHistory(posts);
+            } catch (error) {
+                console.error('Error fetching history:', error);
+                historyContainer.innerHTML = `<p class="text-red-400 text-center">Failed to load history.</p>`;
+            }
+        }
+
+        // --- UI Display & Tab Functions ---
+        function switchTab(activeTab) {
+            if (activeTab === 'generator') {
+                generatorContent.classList.remove('hidden');
+                historyContent.classList.add('hidden');
+                generatorTab.classList.add('bg-slate-700', 'text-white');
+                generatorTab.classList.remove('text-slate-400', 'hover:bg-slate-700/50');
+                historyTab.classList.add('text-slate-400', 'hover:bg-slate-700/50');
+                historyTab.classList.remove('bg-slate-700', 'text-white');
+            } else {
+                historyContent.classList.remove('hidden');
+                generatorContent.classList.add('hidden');
+                historyTab.classList.add('bg-slate-700', 'text-white');
+                historyTab.classList.remove('text-slate-400', 'hover:bg-slate-700/50');
+                generatorTab.classList.add('text-slate-400', 'hover:bg-slate-700/50');
+                generatorTab.classList.remove('bg-slate-700', 'text-white');
+                fetchHistory(); // Refresh history when switching to the tab
+            }
+        }
+
+        function displayHistory(posts) {
+            historyLoader.classList.add('hidden');
+            historyContainer.innerHTML = ''; 
+
+            if (posts.length === 0) {
+                historyContainer.innerHTML = `<p class="text-slate-400 text-center">No posts saved yet. Generate one to get started!</p>`;
+                return;
+            }
+
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'bg-slate-900/50 border border-slate-700 rounded-lg p-6 animate-fade-in';
+                const formattedDate = new Date(post.created_at).toLocaleString();
+                
+                // We need to escape the caption for the data attribute
+                const escapedCaption = post.caption.replace(/"/g, '&quot;');
+
+                postElement.innerHTML = `
+                    <div class="mb-4">
+                        <p class="text-sm text-slate-400"><strong>Topic:</strong> ${post.topic}</p>
+                        <p class="text-xs text-slate-500">${formattedDate}</p>
+                    </div>
+                    <div class="prose-output text-slate-300 mb-4">${markdownConverter.makeHtml(post.caption)}</div>
+                    <div class="border-t border-slate-600 pt-4">
+                        <h4 class="text-md font-semibold text-indigo-400 mb-2">Image Prompt:</h4>
+                        <p class="text-slate-400 font-mono text-xs bg-slate-800 p-2 rounded">${post.image_prompt}</p>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="text-md font-semibold text-indigo-400 mb-2">Hashtags:</h4>
+                        <p class="text-slate-400 font-mono text-sm">${post.hashtags.join(' ')}</p>
+                    </div>
+                    <div class="border-t border-slate-600 pt-4 mt-4">
+                        <button class="history-copy-btn w-full bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-2 px-4 rounded-lg transition duration-200" data-caption="${escapedCaption}" data-hashtags='${JSON.stringify(post.hashtags)}'>
+                            Copy Post Text
+                        </button>
+                    </div>
+                `;
+                historyContainer.appendChild(postElement);
+            });
+        }
+        
+        function displayNewPost({ caption }) {
+            captionOutput.innerHTML = markdownConverter.makeHtml(caption);
+            postOutput.classList.remove('hidden');
+        }
+
         function setLoading(isLoading) {
             generateBtn.disabled = isLoading;
             generateBtn.classList.toggle('opacity-50', isLoading);
             loader.classList.toggle('hidden', !isLoading);
-        }
-
-        function displayPost({ caption, imagePrompt, hashtags }) {
-            rawCaption = caption; 
-            captionOutput.innerHTML = markdownConverter.makeHtml(caption);
-            imagePromptOutput.textContent = imagePrompt;
-            hashtagsOutput.textContent = hashtags.join(' ');
-            postOutput.classList.remove('hidden');
         }
 
         function showError(message) {
@@ -178,20 +268,35 @@
         function hideError() {
             errorOutput.classList.add('hidden');
         }
+        
+        function copyHistoryPost(event) {
+            const button = event.target;
+            const caption = button.dataset.caption;
+            const hashtags = JSON.parse(button.dataset.hashtags).join(' ');
+            const fullPost = `${caption}\n\n${hashtags}`;
 
-        function copyToClipboard() {
-            const fullPost = `${rawCaption}\n\n${hashtagsOutput.textContent}`;
             navigator.clipboard.writeText(fullPost).then(() => {
-                copyBtn.textContent = 'Copied!';
-                setTimeout(() => { copyBtn.textContent = 'Copy Caption & Hashtags'; }, 2000);
+                button.textContent = 'Copied!';
+                setTimeout(() => { button.textContent = 'Copy Post Text'; }, 2000);
             }).catch(err => {
                 console.error('Failed to copy text: ', err);
-                showError('Failed to copy text to clipboard.');
             });
         }
 
+        // --- Event Listeners ---
         generateBtn.addEventListener('click', generatePost);
-        copyBtn.addEventListener('click', copyToClipboard);
+        generatorTab.addEventListener('click', () => switchTab('generator'));
+        historyTab.addEventListener('click', () => switchTab('history'));
+        
+        // Use event delegation for copy buttons
+        historyContainer.addEventListener('click', function(event) {
+            if (event.target.classList.contains('history-copy-btn')) {
+                copyHistoryPost(event);
+            }
+        });
+        
+        // Fetch history when the page first loads so it's ready
+        document.addEventListener('DOMContentLoaded', fetchHistory);
     </script>
 </body>
 </html>
