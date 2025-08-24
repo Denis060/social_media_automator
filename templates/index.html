@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Social Media Post Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader { animation: spin 1s linear infinite; }
+        #captionOutput ul { list-style-type: disc; margin-left: 20px; margin-top: 10px; }
+        #captionOutput li { margin-bottom: 5px; }
+        #captionOutput strong { font-weight: 700; color: #a78bfa; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-3xl mx-auto border border-slate-700">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-400">AI Post Generator Backend</h1>
+            <p class="text-slate-400 mt-2">Craft the perfect post with a persona-driven AI engine.</p>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label for="personaInput" class="block text-sm font-medium text-slate-300 mb-2">My Niche / Persona</label>
+                <input type="text" id="personaInput" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none" value="A data science masters student and content creator.">
+            </div>
+
+            <div>
+                <label for="topicInput" class="block text-sm font-medium text-slate-300 mb-2">Post Topic</label>
+                <input type="text" id="topicInput" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., 'The importance of data cleaning'">
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="toneSelect" class="block text-sm font-medium text-slate-300 mb-2">Select Tone</label>
+                    <select id="toneSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option>Educational</option>
+                        <option>Professional</option>
+                        <option>Witty & Casual</option>
+                        <option>Inspirational</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="platformSelect" class="block text-sm font-medium text-slate-300 mb-2">Select Platform</label>
+                    <select id="platformSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option>Instagram</option>
+                        <option>LinkedIn</option>
+                        <option>Facebook</option>
+                        <option>Twitter (X)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="generateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center">
+                Generate Post
+            </button>
+        </div>
+
+        <div id="loader" class="text-center py-8 hidden">
+            <div class="w-8 h-8 border-4 border-t-indigo-500 border-slate-700 rounded-full loader mx-auto"></div>
+            <p class="text-slate-400 mt-4">AI is crafting your post...</p>
+        </div>
+
+        <div id="errorOutput" class="mt-6 p-4 bg-red-900/50 border border-red-700 text-red-300 rounded-lg hidden"></div>
+
+        <div id="postOutput" class="mt-8 hidden">
+            <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-6 space-y-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-indigo-400 mb-2">Generated Caption:</h3>
+                    <div id="captionOutput" class="text-slate-300"></div>
+                </div>
+                <div class="border-t border-slate-700 pt-6">
+                    <h3 class="text-lg font-semibold text-indigo-400 mb-2">AI Image Prompt:</h3>
+                    <p id="imagePromptOutput" class="text-slate-400 font-mono text-sm bg-slate-900 p-3 rounded-md"></p>
+                </div>
+                <div class="border-t border-slate-700 pt-6">
+                    <h3 class="text-lg font-semibold text-indigo-400 mb-2">Suggested Hashtags:</h3>
+                    <p id="hashtagsOutput" class="text-slate-400 font-mono"></p>
+                </div>
+            </div>
+            <button id="copyBtn" class="w-full mt-4 bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-3 px-4 rounded-lg transition duration-200">
+                Copy Caption & Hashtags
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM Element References
+        const personaInput = document.getElementById('personaInput');
+        const topicInput = document.getElementById('topicInput');
+        const toneSelect = document.getElementById('toneSelect');
+        const platformSelect = document.getElementById('platformSelect');
+        const generateBtn = document.getElementById('generateBtn');
+        const loader = document.getElementById('loader');
+        const postOutput = document.getElementById('postOutput');
+        const captionOutput = document.getElementById('captionOutput');
+        const hashtagsOutput = document.getElementById('hashtagsOutput');
+        const imagePromptOutput = document.getElementById('imagePromptOutput');
+        const errorOutput = document.getElementById('errorOutput');
+        const copyBtn = document.getElementById('copyBtn');
+
+        const markdownConverter = new showdown.Converter();
+        let rawCaption = ''; 
+
+        async function generatePost() {
+            const payload = {
+                persona: personaInput.value.trim(),
+                topic: topicInput.value.trim(),
+                tone: toneSelect.value,
+                platform: platformSelect.value,
+            };
+
+            if (!payload.topic) {
+                showError('Please enter a topic.');
+                return;
+            }
+
+            setLoading(true);
+            hideError();
+            postOutput.classList.add('hidden');
+
+            try {
+                // The fetch call now points to our own Flask backend endpoint
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0) {
+                    const responseText = result.candidates[0].content.parts[0].text;
+                    const parsedResponse = JSON.parse(responseText);
+                    displayPost(parsedResponse);
+                } else {
+                    throw new Error("The AI returned an empty or invalid response.");
+                }
+
+            } catch (error) {
+                console.error('Error generating post:', error);
+                showError(`An error occurred: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function setLoading(isLoading) {
+            generateBtn.disabled = isLoading;
+            generateBtn.classList.toggle('opacity-50', isLoading);
+            loader.classList.toggle('hidden', !isLoading);
+        }
+
+        function displayPost({ caption, imagePrompt, hashtags }) {
+            rawCaption = caption; 
+            captionOutput.innerHTML = markdownConverter.makeHtml(caption);
+            imagePromptOutput.textContent = imagePrompt;
+            hashtagsOutput.textContent = hashtags.join(' ');
+            postOutput.classList.remove('hidden');
+        }
+
+        function showError(message) {
+            errorOutput.textContent = message;
+            errorOutput.classList.remove('hidden');
+        }
+
+        function hideError() {
+            errorOutput.classList.add('hidden');
+        }
+
+        function copyToClipboard() {
+            const fullPost = `${rawCaption}\n\n${hashtagsOutput.textContent}`;
+            navigator.clipboard.writeText(fullPost).then(() => {
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => { copyBtn.textContent = 'Copy Caption & Hashtags'; }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                showError('Failed to copy text to clipboard.');
+            });
+        }
+
+        generateBtn.addEventListener('click', generatePost);
+        copyBtn.addEventListener('click', copyToClipboard);
+    </script>
+</body>
+</html>
